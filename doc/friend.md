@@ -23,7 +23,7 @@ Response Body (Success) :
   "data": {
     "userId": 1,
     "friendId": 2,
-    "username friend": "rendi",
+    "username": "rendi",
     "status": "PENDING"
   }
 }
