@@ -15,18 +15,27 @@ export class TestService {
   async deleteUser() {
     await this.prismaService.user.deleteMany({
       where: {
-        username: 'test',
+        username: {
+          contains: 'test',
+        },
       },
     });
   }
 
   async createUser() {
-    await this.prismaService.user.create({
-      data: {
-        username: 'test',
-        password: await bcrypt.hash('test', 10),
-        token: 'test',
-      },
+    await this.prismaService.user.createMany({
+      data: [
+        {
+          username: 'test',
+          password: await bcrypt.hash('test', 10),
+          token: 'test',
+        },
+        {
+          username: 'test2',
+          password: await bcrypt.hash('test', 10),
+          token: 'test',
+        },
+      ],
     });
   }
 
@@ -34,6 +43,22 @@ export class TestService {
     return await this.prismaService.user.findUnique({
       where: {
         username: 'test',
+      },
+    });
+  }
+
+  async getFriendId(): Promise<User> {
+    return await this.prismaService.user.findUnique({
+      where: {
+        username: 'test2',
+      },
+    });
+  }
+
+  async deleteFriends() {
+    await this.prismaService.friendship.deleteMany({
+      where: {
+        friendId: (await this.getFriendId()).id,
       },
     });
   }
