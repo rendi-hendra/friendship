@@ -7,10 +7,10 @@ import * as bcrypt from 'bcrypt';
 export class TestService {
   constructor(private prismaService: PrismaService) {}
 
-  //   async deleteAll() {
-  //     await this.deletePosts();
-  //     await this.deleteUser();
-  //   }
+  async deleteAll() {
+    await this.deleteFriends();
+    await this.deleteUser();
+  }
 
   async deleteUser() {
     await this.prismaService.user.deleteMany({
@@ -33,7 +33,7 @@ export class TestService {
         {
           username: 'test2',
           password: await bcrypt.hash('test', 10),
-          token: 'test',
+          token: 'test2',
         },
       ],
     });
@@ -55,11 +55,31 @@ export class TestService {
     });
   }
 
+  async getuserId(): Promise<User> {
+    return await this.prismaService.user.findUnique({
+      where: {
+        username: 'test',
+      },
+    });
+  }
+
+  async updateStatus() {
+    return await this.prismaService.friendship.update({
+      where: {
+        userId_friendId: {
+          userId: (await this.getuserId()).id,
+          friendId: (await this.getFriendId()).id,
+        },
+      },
+      data: {
+        status: 'PENDING',
+      },
+    });
+  }
+
   async deleteFriends() {
     await this.prismaService.friendship.deleteMany({
-      where: {
-        friendId: (await this.getFriendId()).id,
-      },
+      where: { userId: (await this.getuserId()).id },
     });
   }
 }

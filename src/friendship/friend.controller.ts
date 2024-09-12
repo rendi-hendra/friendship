@@ -5,8 +5,8 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
-  Put,
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
 import {
@@ -56,14 +56,14 @@ export class FriendController {
     };
   }
 
-  @Put('/:friendId')
+  @Patch('/:userId')
   @HttpCode(200)
   async updateStatus(
     @Auth() user: User,
-    @Param('friendId', ParseIntPipe) friendId: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @Body() request: UpdateStatusRequest,
   ): Promise<WebResponse<FriendResponse>> {
-    request.userId = friendId;
+    request.userId = userId;
     const result = await this.friendService.updateStatus(user, request);
     return {
       data: result,

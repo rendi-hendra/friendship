@@ -99,4 +99,54 @@ describe('FriendController', () => {
       expect(response.body.data).toBeDefined();
     });
   });
+
+  describe('PUT /api/friends/:userId', () => {
+    beforeEach(async () => {
+      await testService.updateStatus();
+    });
+    it('should be able to accept friend request', async () => {
+      const userId = await testService.getuserId();
+      const response = await request(app.getHttpServer())
+        .patch(`/api/friends/${userId.id}`)
+        .set('Authorization', 'test2')
+        .send({
+          status: 'ACCEPTED',
+        });
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.status).toBe('ACCEPTED');
+    });
+
+    it('should be rejected if request friend is invalid', async () => {
+      const userId = await testService.getuserId();
+      const response = await request(app.getHttpServer())
+        .patch(`/api/friends/${userId.id + 1}`)
+        .set('Authorization', 'test2')
+        .send({
+          status: 'ACCEPTED',
+        });
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(404);
+      expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be rejected if request yourself is invalid', async () => {
+      const userId = await testService.getuserId();
+      const response = await request(app.getHttpServer())
+        .patch(`/api/friends/${userId.id}`)
+        .set('Authorization', 'test')
+        .send({
+          status: 'ACCEPTED',
+        });
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(404);
+      expect(response.body.errors).toBeDefined();
+    });
+  });
 });

@@ -123,7 +123,7 @@ export class FriendService {
     });
 
     if (!friend) {
-      throw new HttpException('Friend not found', 404);
+      throw new HttpException(`Friend not found`, 404);
     }
 
     friend = await this.prismaService.friendship.update({
