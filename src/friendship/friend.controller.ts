@@ -69,4 +69,11 @@ export class FriendController {
       data: result,
     };
   }
+
+  @Get()
+  @HttpCode(200)
+  async list(@Auth() user: User): Promise<WebResponse<FriendResponse[]>> {
+    const result = await this.friendService.list(user);
+    return result;
+  }
 }

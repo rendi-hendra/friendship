@@ -10,6 +10,7 @@ import {
 } from '../model/friend.model';
 import { FriendValidation } from './friend.validation';
 import { User } from '@prisma/client';
+import { WebResponse } from '../model/web.model';
 
 @Injectable()
 export class FriendService {
@@ -44,6 +45,25 @@ export class FriendService {
       throw new HttpException('Cannot send friend request to yourself', 400);
     }
 
+    const friendId = await this.prismaService.friendship.findFirst({
+      where: {
+        OR: [
+          {
+            userId: user.id,
+            friendId: friendRequest.friendId,
+          },
+          {
+            userId: friendRequest.friendId,
+            friendId: user.id,
+          },
+        ],
+      },
+    });
+
+    if (friendId) {
+      throw new HttpException('You are already friend with this user', 400);
+    }
+
     const friend = await this.prismaService.friendship.create({
       data: {
         userId: user.id,
@@ -64,6 +84,7 @@ export class FriendService {
   }
 
   async getFriendsRequest(user: User): Promise<FriendResponse[]> {
+    this.logger.debug(`Get request friend ${JSON.stringify(user)}`);
     const friends = await this.prismaService.friendship.findMany({
       where: {
         userId: user.id,
@@ -84,6 +105,7 @@ export class FriendService {
   }
 
   async getFriendsResponse(user: User): Promise<FriendResponse[]> {
+    this.logger.debug(`Get response friend ${JSON.stringify(user)}`);
     const friends = await this.prismaService.friendship.findMany({
       where: {
         friendId: user.id,
@@ -113,6 +135,8 @@ export class FriendService {
       FriendValidation.UpdateStatus,
       request,
     );
+
+    this.logger.debug(`Update status friend ${JSON.stringify(request)}`);
 
     let friend = await this.prismaService.friendship.findFirst({
       where: {
@@ -144,21 +168,41 @@ export class FriendService {
       status: friend.status,
       createdAt: friend.createdAt,
     };
+  }
 
-    // const updatedFriend = await this.prismaService.friendship.update({
-    //   where: {
-    //     userId: friend.userId,
-    //     friendId: friend.friendId,
-    //   },
-    //   data: {
-    //     status: request.status,
-    //   },
-    // });
-    // return {
-    //   userId: updatedFriend.userId,
-    //   friendId: updatedFriend.friendId,
-    //   status: updatedFriend.status,
-    //   createdAt: updatedFriend.createdAt,
-    // };
+  async list(user: User): Promise<WebResponse<FriendResponse[]>> {
+    this.logger.debug(`List friend ${JSON.stringify(user)}`);
+    const friends = await this.prismaService.friendship.findMany({
+      where: {
+        OR: [
+          {
+            userId: user.id,
+            status: 'ACCEPTED',
+          },
+          {
+            friendId: user.id,
+            status: 'ACCEPTED',
+          },
+        ],
+      },
+      include: {
+        friend: true,
+      },
+    });
+
+    return {
+      data: friends.map((friend) => {
+        return {
+          userId: friend.userId,
+          friendId: friend.friendId,
+          status: friend.status,
+          username: friend.friend.username,
+          createdAt: friend.createdAt,
+        };
+      }),
+      paging: {
+        size: friends.length,
+      },
+    };
   }
 }

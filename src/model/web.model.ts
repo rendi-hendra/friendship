@@ -6,6 +6,6 @@ export class WebResponse<T> {
 
 export class Paging {
   size: number;
-  total_page: number;
-  current_page: number;
+  total_page?: number;
+  current_page?: number;
 }

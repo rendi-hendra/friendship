@@ -102,7 +102,7 @@ describe('FriendController', () => {
 
   describe('PUT /api/friends/:userId', () => {
     beforeEach(async () => {
-      await testService.updateStatus();
+      await testService.updateStatus('PENDING');
     });
     it('should be able to accept friend request', async () => {
       const userId = await testService.getuserId();
@@ -147,6 +147,27 @@ describe('FriendController', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.errors).toBeDefined();
+    });
+  });
+
+  describe('GET /api/friends', () => {
+    beforeEach(async () => {
+      await testService.updateStatus('ACCEPTED');
+    });
+
+    afterEach(async () => {
+      await testService.updateStatus('PENDING');
+    });
+
+    it('should be able to get friends response', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/friends')
+        .set('Authorization', 'test2');
+
+      logger.info(response.body.data);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBeDefined();
     });
   });
 });

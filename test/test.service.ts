@@ -1,6 +1,6 @@
 import { PrismaService } from '../src/common/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { FriendshipStatus, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -63,7 +63,7 @@ export class TestService {
     });
   }
 
-  async updateStatus() {
+  async updateStatus(status: FriendshipStatus) {
     return await this.prismaService.friendship.update({
       where: {
         userId_friendId: {
@@ -72,7 +72,7 @@ export class TestService {
         },
       },
       data: {
-        status: 'PENDING',
+        status: status,
       },
     });
   }
