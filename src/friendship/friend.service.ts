@@ -172,31 +172,36 @@ export class FriendService {
 
   async list(user: User): Promise<WebResponse<FriendResponse[]>> {
     this.logger.debug(`List friend ${JSON.stringify(user)}`);
+
     const friends = await this.prismaService.friendship.findMany({
       where: {
-        OR: [
+        AND: [
+          { status: 'ACCEPTED' },
           {
-            userId: user.id,
-            status: 'ACCEPTED',
-          },
-          {
-            friendId: user.id,
-            status: 'ACCEPTED',
+            OR: [
+              { userId: user.id }, // Jika user adalah pengirim permintaan
+              { friendId: user.id }, // Jika user adalah penerima permintaan
+            ],
           },
         ],
       },
       include: {
-        friend: true,
+        friend: true, // Relasi dengan friend untuk mendapatkan informasi friend
+        user: true, // Relasi dengan user untuk mendapatkan informasi user
       },
     });
 
     return {
       data: friends.map((friend) => {
+        const isUserSender = friend.userId === user.id;
+
         return {
           userId: friend.userId,
           friendId: friend.friendId,
           status: friend.status,
-          username: friend.friend.username,
+          username: isUserSender
+            ? friend.friend.username
+            : friend.user.username,
           createdAt: friend.createdAt,
         };
       }),
@@ -205,4 +210,32 @@ export class FriendService {
       },
     };
   }
+
+  // async list(user: User): Promise<WebResponse<FriendResponse[]>> {
+  //   this.logger.debug(`List friend ${JSON.stringify(user)}`);
+  //   const friends = await this.prismaService.friendship.findMany({
+  //     where: {
+  //       userId: user.id,
+  //       status: 'ACCEPTED',
+  //     },
+  //     include: {
+  //       friend: true,
+  //     },
+  //   });
+
+  //   return {
+  //     data: friends.map((friend) => {
+  //       return {
+  //         userId: friend.userId,
+  //         friendId: friend.friendId,
+  //         status: friend.status,
+  //         username: friend.friend.username,
+  //         createdAt: friend.createdAt,
+  //       };
+  //     }),
+  //     paging: {
+  //       size: friends.length,
+  //     },
+  //   };
+  // }
 }
